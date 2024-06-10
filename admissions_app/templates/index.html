@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admissions App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+    <header class="bg-primary text-white text-center py-3 mb-4">
+        <div class="container">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Horse Logo" class="logo">
+            <h1>AdmissionsRocket</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row mb-3">
+            <div class="col-md-8 offset-md-2">
+                <input type="text" id="search-bar" class="form-control" placeholder="Search PCC for Patient" oninput="filterPatients()">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col text-center">
+                <button id="new-form-button" class="btn btn-primary" onclick="window.location.href='https://msbdocs.com/new_form_url'">Blank Admissions Form</button>
+            </div>
+        </div>
+        <div id="patient-list" class="table-responsive">
+            {% include 'patient_list.html' %}
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white text-center py-3 mt-4">
+        <p>&copy; 2024 Admissions App. All rights reserved.</p>
+    </footer>
+</body>
+</html>

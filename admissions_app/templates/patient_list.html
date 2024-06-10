@@ -1,0 +1,28 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for patient in patients %}
+        <tr>
+            <td onclick="submitForm('{{ patient.id }}')">{{ patient.name }}</td>
+            <td>{{ patient.age }}</td>
+            <td>{{ patient.email }}</td>
+            <td>{{ patient.phone }}</td>
+            <td>
+                {% if patient.admission_filled %}
+                <img src="{{ url_for('static', filename='check.png') }}" alt="Completed">
+                {% else %}
+                <img src="{{ url_for('static', filename='cross.png') }}" alt="Not Completed">
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
