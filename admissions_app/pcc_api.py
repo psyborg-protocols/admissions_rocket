@@ -12,6 +12,7 @@ KEY_FILE = "C:/Users/aburrows/Documents/Security/Client Certificate/admissionsro
 
 logging.basicConfig(level=logging.DEBUG)
 
+#Gets an Oauth token to access PCC API
 def get_oauth_token():
     auth_header = f'Basic {base64.b64encode(f"{PCC_CLIENT_ID}:{PCC_CLIENT_SECRET}".encode()).decode()}'
     headers = {
@@ -32,69 +33,25 @@ def get_oauth_token():
         logging.error(f"Response content: {e.response.content if e.response else 'No response'}")
         return None
 
-def fetch_patient_data(token):
-    headers = {
-        'Authorization': f'Bearer {token}'
-    }
-    params = {
-        "facId": 45
-    }
-    try:
-        url = f"{PCC_API_BASE_ENDPOINT}/{ORGANIZATION_ID}/patients"
-        logging.debug(f"Fetching patient data with URL: {url}, headers: {headers}, and params: {params}")
-        response = requests.get(url, headers=headers, params=params, cert=(CERT_FILE, KEY_FILE))
-        response.raise_for_status()
-        patient_data = response.json()
-        logging.debug(f"Received patient data: {patient_data}")
-        return patient_data
-    except requests.RequestException as e:
-        logging.error(f"Error fetching patient data: {e}")
-        if e.response:
-            logging.error(f"Response content: {e.response.text}")
-        else:
-            logging.error("No response content available")
-        return None
-    
-def patient_fetcher():
-    token = get_oauth_token()
-    if token:
-        patient_data = fetch_patient_data(token)
-        if patient_data:
-            print("Patient data fetched successfully:")
-            print(patient_data)
-            return patient_data
-        else:
-            print("Failed to fetch patient data.")
-    else:
-        print("Failed to obtain OAuth token.")
-
-def fetch_facilities(token):
-    headers = {
-        'Authorization': f'Bearer {token}'
-    }
-    try:
-        url = f"https://connect2.pointclickcare.com/api/public/preview1/orgs/{ORGANIZATION_ID}/facs"
-        response = requests.get(url, headers=headers, cert=(CERT_FILE, KEY_FILE))
-        response.raise_for_status()
-        facilities_data = response.json()
-        return facilities_data
-    except requests.RequestException as e:
-        logging.error(f"Error fetching facilities data: {e}")
-        if e.response:
-            logging.error(f"Response content: {e.response.text}")
-        else:
-            logging.error("No response content available")
-        return None
+#make_request method: takes call details and makes a request to PCC API
+#params:a dictionary with the details of the call to be made
+#   {
+#   'path':'/public/preview1/orgs/{orgUuid}/patients'
+#   'method': 'GET'
+#   'path_params': {'orgUuid': '7daf45ae-1982-4b95-9df8-46a067df0de7',}
+#   'call_params': {'facId': 12,}
+#   }
 
 
-def make_request(call_details, save_to_file):
+def make_request(call_details):
     token = get_oauth_token()
     if not token:
         print("Failed to obtain OAuth token.")
         return
 
-    # Construct URL using the constant ORGANIZATION_ID
-    path = call_details['path'].replace("{orgUuid}", ORGANIZATION_ID)
+    # Construct URL using the path params
+    for param in call_details['path_params']:    
+        path = call_details['path'].replace(f'{{{param}}}', call_details['path_params'][param])
     url = f"https://connect2.pointclickcare.com/api{path}"
     method = call_details['method']
     headers = {
@@ -102,26 +59,9 @@ def make_request(call_details, save_to_file):
         'Content-Type': 'application/json'
     }
 
+    params = call_details['call_params']
+
     print(f'building {method} request to endpoint: {url}')
-
-    # Collect parameters and filter out those with empty values
-    params = {}
-    for param in call_details['parameters']:
-        if param['name'] == 'orgUuid':
-            continue
-
-        param_value = None
-        # Always prompt the user for input
-        while param['required'] and not param_value:
-            param_value = input(f"Enter value for {param['name']} (required): ")
-            if param['required'] and not param_value:
-                print(f"{param['name']} is required. Please provide a value.")
-        
-        if not param['required']:
-            param_value = input(f"Enter value for {param['name']} (optional): ")
-
-        if param_value:
-            params[param['name']] = param_value
 
     response = None
     try:
@@ -138,13 +78,8 @@ def make_request(call_details, save_to_file):
 
         response.raise_for_status()
 
-        if save_to_file:
-            file_path = input("Enter file path to save response: ")
-            with open(file_path, 'w') as file:
-                file.write(response.text)
-            return f"Response saved to {file_path}"
-        else:
-            return response.json()
+        return response.json()
+
     except requests.RequestException as e:
         logging.error(f"Error making API request: {e}")
         if response:
